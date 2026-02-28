@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerPath | Orbital UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Pro-Level Design System --- */
+        :root {
+            --bg-base: #030712;
+            --surface-glass: rgba(17, 24, 39, 0.65);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --surface-hover: rgba(255, 255, 255, 0.12);
+            --neon-primary: #8b5cf6;
+            --neon-secondary: #06b6d4;
+            --success: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --nav-height: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* =========================================
+           AMBIENT ANIMATED BACKGROUND
+           ========================================= */
+        .ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background-color: var(--bg-base);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.5;
+            animation: floatOrb infinite alternate ease-in-out;
+            will-change: transform;
+        }
+
+        .orb-purple {
+            width: 45vw; height: 45vw;
+            background: rgba(139, 92, 246, 0.35);
+            top: -10%; left: -10%;
+            animation-duration: 18s;
+        }
+
+        .orb-cyan {
+            width: 40vw; height: 40vw;
+            background: rgba(6, 182, 212, 0.25);
+            bottom: -10%; right: -5%;
+            animation-duration: 22s;
+            animation-direction: alternate-reverse;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(4%, 6%) scale(1.05); }
+            100% { transform: translate(-4%, -4%) scale(0.95); }
+        }
+
+        /* --- Global Animations --- */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* =========================================
+           AUTHENTICATION MODAL OVERLAY
+           ========================================= */
+        #auth-view {
+            position: fixed;
+            inset: 0;
+            display: none; 
+            opacity: 0;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 3000;
+            background: rgba(3, 7, 18, 0.85); 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            transition: opacity 0.4s ease;
+        }
+
+        .auth-card {
+            background: var(--surface-glass);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            width: 100%;
+            max-width: 420px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: transparent; border: none;
+            color: var(--text-muted); font-size: 1.5rem;
+            cursor: pointer; transition: color 0.3s;
+        }
+        .close-modal-btn:hover { color: var(--text-main); }
+
+        .auth-header { text-align: center; margin-bottom: 2.5rem; }
+        .auth-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -1px; }
+        .auth-header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .input-group { position: relative; margin-bottom: 1.5rem; }
+        .input-group input {
+            width: 100%; padding: 16px;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: var(--text-main); font-size: 1rem;
+            transition: all 0.3s ease; outline: none;
+        }
+        .input-group input:focus {
+            border-color: var(--neon-secondary); background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+        }
+        .input-group label {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); pointer-events: none; transition: all 0.3s ease; font-size: 1rem;
+        }
+        .input-group input:focus ~ label, .input-group input:not(:placeholder-shown) ~ label {
+            top: -10px; left: 12px; font-size: 0.75rem; color: var(--neon-secondary);
+            background: var(--bg-base); padding: 0 6px; border-radius: 4px;
+        }
+
+        .auth-toggle { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); }
+        .auth-toggle span { color: var(--neon-secondary); cursor: pointer; font-weight: 600; transition: color 0.3s; }
+        .auth-toggle span:hover { color: #fff; text-shadow: 0 0 10px var(--neon-secondary); }
+
+        .social-login { display: flex; gap: 12px; margin-top: 2rem; }
+        .social-btn {
+            flex: 1; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--surface-border); color: var(--text-main); cursor: pointer; font-weight: 500;
+            transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .social-btn:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+
+        #register-form { display: none; }
+
+        /* =========================================
+           MAIN DASHBOARD APP (Visible by Default)
+           ========================================= */
+        #app-view {
+            display: flex; 
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 24px; left: 50%; transform: translateX(-50%);
+            width: max-content; min-width: 500px; height: var(--nav-height);
+            background: rgba(3, 7, 18, 0.6);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--surface-border);
+            border-radius: 100px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 12px 0 32px; z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .brand { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+        .brand span { color: var(--neon-secondary); }
+
+        .nav-links { display: flex; gap: 8px; list-style: none; align-items: center;}
+        .nav-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 12px 24px; border-radius: 100px; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .nav-btn.active { 
+            background: var(--text-main); color: var(--bg-base); 
+            box-shadow: 0 4px 15px rgba(255,255,255,0.15); 
+        }
+
+        /* Special Styling for the Nav Login/Logout Buttons */
+        .login-btn-nav {
+            background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--neon-secondary); padding: 10px 20px; border-radius: 100px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; transition: all 0.3s ease; margin-left: 10px;
+        }
+        .login-btn-nav:hover { background: var(--neon-secondary); color: var(--bg-base); box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);}
+
+        .logout-btn {
+            background: rgba(255, 50, 50, 0.1); border: 1px solid rgba(255, 50, 50, 0.3);
+            color: #ff6b6b; padding: 10px 18px; border-radius: 100px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; margin-left: 10px;
+        }
+        .logout-btn:hover { background: rgba(255, 50, 50, 0.2); }
+
+        .main-body {
+            flex: 1; padding: calc(var(--nav-height) + 60px) 24px 80px; 
+            width: 100%; max-width: 1100px; margin: 0 auto;
+        }
+
+        .page { display: none; opacity: 0; transform: translateY(20px) scale(0.98); transition: opacity 0.4s ease, transform 0.4s; }
+        .page.active { display: block; opacity: 1; transform: translateY(0) scale(1); animation: fadeUp 0.5s ease forwards; }
+
+        .hero-header { text-align: center; margin-bottom: 4rem; display: flex; flex-direction: column; align-items: center; }
+        .hero-header h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 700; margin-bottom: 1rem; line-height: 1.05; letter-spacing: -1.5px; }
+        .hero-header p { font-size: clamp(1rem, 2vw, 1.15rem); color: var(--text-muted); max-width: 550px; margin: 0 auto; line-height: 1.6; }
+        .text-gradient { background: linear-gradient(135deg, #fff 20%, var(--neon-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .profile-badge { 
+            display: inline-flex; align-items: center; gap: 10px; 
+            background: rgba(255,255,255,0.03); padding: 8px 20px; 
+            border-radius: 100px; border: 1px solid var(--surface-border); 
+            margin-bottom: 2rem; font-size: 0.9rem; font-weight: 500;
+        }
+        .profile-dot { width: 8px; height: 8px; background: var(--text-muted); border-radius: 50%; transition: background 0.3s, box-shadow 0.3s;}
+        .profile-dot.logged-in { background: var(--success); box-shadow: 0 0 12px var(--success); }
+
+        .bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; grid-auto-rows: minmax(200px, auto); }
+        .glass-card {
+            background: var(--surface-glass); border: 1px solid var(--surface-border);
+            border-radius: 24px; padding: 2rem; position: relative; overflow: hidden;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover { transform: translateY(-4px); border-color: var(--surface-hover); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .glass-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+        .col-span-2 { grid-column: span 2; }
+        .col-span-1 { grid-column: span 1; }
+
+        .progress-container { margin-top: 1.8rem; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; font-weight: 500; }
+        .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .fill-cyan { background: var(--neon-secondary); box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); }
+        .fill-purple { background: var(--neon-primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+
+        /* Roadmap Timeline Optimization */
+        .timeline { border-left: 2px solid var(--surface-border); padding-left: 24px; display: flex; flex-direction: column; gap: 32px; margin-top: 1rem;}
+        .timeline-node { position: relative; }
+        .node-dot { position: absolute; left: -31px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-base); border: 2px solid var(--text-muted); transition: all 0.3s ease;}
+        .timeline-node.active .node-dot { border-color: var(--neon-secondary); box-shadow: 0 0 15px var(--neon-secondary); background: var(--neon-secondary); }
+        .timeline-node.completed .node-dot { border-color: var(--success); background: var(--success); }
+        .timeline-node h4 { font-size: 1.15rem; margin-bottom: 6px; color: var(--text-main); }
+        .timeline-node.active h4 { color: var(--neon-secondary); }
+
+        .action-btn {
+            width: 100%; padding: 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
+            color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+        }
+        .action-btn:hover { background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); transform: translateY(-2px); }
+
+        .footer { padding: 2rem 24px; display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); max-width: 1100px; margin: auto; width: 100%; border-top: 1px solid var(--surface-border);}
+
+        /* Mobile Responsiveness */
+        @media (max-width: 850px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .col-span-2 { grid-column: span 1; }
+            .top-nav { top: auto; bottom: 20px; width: calc(100% - 40px); min-width: auto; padding: 8px; justify-content: center; }
+            .brand { display: none; } 
+            .nav-links { width: 100%; justify-content: space-between; }
+            .nav-btn { flex: 1; text-align: center; padding: 12px 0; font-size: 0.9rem; }
+            .login-btn-nav, .logout-btn { padding: 8px; margin-left: 5px; font-size: 0.8rem; }
+            .main-body { padding: 40px 20px 120px; }
+            .auth-card { padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="orb orb-purple"></div>
+        <div class="orb orb-cyan"></div>
+    </div>
+
+    <div id="app-view">
+        <nav class="top-nav">
+            <div class="brand"><img src="carrer.png" alt="carrer" width="130px"></div>
+            <ul class="nav-links">
+                <li><button class="nav-btn active" data-target="home">Overview</button></li>
+                <li><button class="nav-btn" data-target="roadmap">Roadmap</button></li>
+                <li><button class="nav-btn" data-target="simulator">Simulator</button></li>
+                
+                <li id="nav-login-wrapper"><button class="login-btn-nav" onclick="openAuthModal()">Log In</button></li>
+                <li id="nav-logout-wrapper" style="display: none;"><button class="logout-btn" onclick="logout()">Log Out</button></li>
+            </ul>
+        </nav>
+
+        <main class="main-body">
+            <section id="home" class="page active">
+                <div class="hero-header">
+                    <div class="profile-badge">
+                        <div class="profile-dot" id="header-status-dot"></div>
+                        <span id="header-user-name">Guest • Viewing Mode</span>
+                    </div>
+                    <h1>Architect your <span class="text-gradient">Future.</span></h1>
+                    <p>Your dynamic matrix mapping academic foundations to high-impact industry roles.</p>
+                </div>
+
+                <div class="bento-grid">
+                    <div class="glass-card col-span-2">
+                        <h3>⚡ Active Skill Matrix</h3>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">Currently optimizing for Open Source Contribution and Full-Stack Engineering roles.</p>
+                        
+                        <div class="progress-container">
+                            <div class="progress-label"><span>Python & Data Structures (DSA)</span><span>85%</span></div>
+                            <div class="progress-track"><div class="progress-fill fill-cyan" style="width: 85%;"></div></div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-label"><span>Web Dev (MERN Stack)</span><span>60%</span></div>
+                            <div class="progress-track"><div class="progress-fill fill-purple" style="width: 60%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🏆</div>
+                        <h4 style="color: var(--neon-secondary); margin-bottom: 8px;">Pull Shark Unlocked</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">GitHub milestones achieved. Ready for advanced PRs.</p>
+                    </div>
+
+                    <div class="glass-card col-span-1">
+                        <h3>Target Focus</h3>
+                        <h2 style="font-size: 2rem; margin: 15px 0;">GSoC</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Preparing proposals for AOSSIE organization.</p>
+                    </div>
+                    
+                    <div class="glass-card col-span-2" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h3>Daily Debug Streak</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Consistent focus logging.</p>
+                        </div>
+                        <div style="font-size: 2.5rem; color: var(--success); font-weight: 700;">14<span style="font-size: 1rem; color: var(--text-muted);"> Days</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="roadmap" class="page">
+                <div class="hero-header" style="text-align: left; align-items: flex-start; margin-bottom: 2rem;">
+                    <h1>Progression <span class="text-gradient">Pathway.</span></h1>
+                    <p>Your step-by-step vertical transition timeline.</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="timeline">
+                        <div class="timeline-node completed">
+                            <div class="node-dot"></div>
+                            <h4>1. Engineering Foundations</h4>
+                            <p style="font-size: 0.95rem; color: var(--text-muted);">Mastered C programming and Digital Logic concepts.</p>
+                        </div>
+                        <div class="timeline-node active">
+                            <div class="node-dot"></div>
+                            <h4>2. Open Source Contributor</h4>
+                            <p style="font-size: 0.95rem; color: var(--text-muted);">Currently engaging in Hacktoberfest & GSoC preparation.</p>
+                        </div>
+                        <div class="timeline-node">
+                            <div class="node-dot"></div>
+                            <h4>3. SDE Intern</h4>
+                            <p style="font-size: 0.95rem; color: var(--text-muted);">Requires advanced DSA application and portfolio deployment.</p>
+                        </div>
+                    </div>
+                 </div>
+            </section>
+
+            <section id="simulator" class="page">
+                <div class="hero-header">
+                    <h1>Career <span class="text-gradient">Simulator.</span></h1>
+                    <p>Project how acquiring new skills dynamically alters your trajectory.</p>
+                </div>
+                
+                <div class="glass-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h3 style="justify-content: center;">What if I build a Full-Stack App?</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 15px 0 25px;">Simulate adding Backend frameworks to your frontend skill set.</p>
+                    
+                    <button class="action-btn" id="sim-btn">Initialize Simulation</button>
+                    
+                    <div id="sim-result" style="display: none; margin-top: 25px; padding: 20px; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 16px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="color: var(--success); font-size: 1.2rem;">✓</span>
+                            <h4 style="color: var(--neon-secondary);">Simulation Complete</h4>
+                        </div>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">Backend integration unlocks the "Full-Stack Engineer" pathway. Your project "BRAINROT-NEWZZ" can now handle live API requests. Industry demand score +42%.</p>
+                    </div>
+                 </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div>© 2026 CareerPath. All systems operational.</div>
+            <div style="display: flex; gap: 20px;">
+                <a href="#" style="color: inherit; text-decoration: none;">Docs</a>
+                <a href="#" style="color: inherit; text-decoration: none;">GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+    <div id="auth-view">
+        <div class="auth-card" id="auth-card-inner">
+            <button class="close-modal-btn" onclick="closeAuthModal()">✕</button>
+            
+            <div id="login-form">
+                <div class="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Access your orbital career matrix.</p>
+                </div>
+                <form id="form-login" onsubmit="handleAuth(event)">
+                    <div class="input-group">
+                        <input type="text" id="login-email" placeholder=" " required>
+                        <label for="login-email">Email Address</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="login-pass" placeholder=" " required>
+                        <label for="login-pass">Password</label>
+                    </div>
+                    <button type="submit" class="action-btn">Initialize Session</button>
+                </form>
+                <div class="auth-toggle">
+                    New to CareerPath? <span onclick="toggleAuthForms()">Establish connection</span>
+                </div>
+            </div>
+
+            <div id="register-form">
+                <div class="auth-header">
+                    <h2>Establish Profile</h2>
+                    <p>Begin mapping your trajectory.</p>
+                </div>
+                <form id="form-register" onsubmit="handleAuth(event)">
+                    <div class="input-group">
+                        <input type="text" id="reg-name" placeholder=" " required>
+                        <label for="reg-name">Full Name</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="reg-email" placeholder=" " required>
+                        <label for="reg-email">Email Address</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="reg-pass" placeholder=" " required>
+                        <label for="reg-pass">Password</label>
+                    </div>
+                    <button type="submit" class="action-btn" style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));">Create Account</button>
+                </form>
+                <div class="auth-toggle">
+                    Already operational? <span onclick="toggleAuthForms()">Return to matrix</span>
+                </div>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn" type="button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </button>
+                <button class="social-btn" type="button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
+                    Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Authentication Modal Logic ---
+        const authView = document.getElementById('auth-view');
+        const authCardInner = document.getElementById('auth-card-inner');
+
+        function openAuthModal() {
+            authView.style.display = 'flex';
+            setTimeout(() => {
+                authView.style.opacity = '1';
+                authCardInner.style.transform = 'scale(1)';
+            }, 10);
+        }
+
+        function closeAuthModal() {
+            authView.style.opacity = '0';
+            authCardInner.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                authView.style.display = 'none';
+            }, 400); 
+        }
+
+        function toggleAuthForms() {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                regForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                regForm.style.display = 'block';
+            }
+        }
+
+        function handleAuth(event) {
+            event.preventDefault(); 
+            const btn = event.target.querySelector('button[type="submit"]');
+            btn.innerText = "Authenticating...";
+            btn.style.opacity = "0.7";
+
+            // Simulate backend login delay
+            setTimeout(() => {
+                closeAuthModal();
+                
+                // Update UI state to "Logged In"
+                document.getElementById('nav-login-wrapper').style.display = 'none';
+                document.getElementById('nav-logout-wrapper').style.display = 'block';
+                
+                document.getElementById('header-user-name').innerText = "Yashaswini • Info Science Sem 4";
+                document.getElementById('header-status-dot').classList.add('logged-in');
+                
+                // Reset button for next time
+                setTimeout(() => {
+                    btn.innerText = btn.id === "reg-btn" ? "Create Account" : "Initialize Session";
+                    btn.style.opacity = "1";
+                    document.querySelectorAll('form').forEach(f => f.reset());
+                }, 400);
+
+            }, 1200);
+        }
+
+        function logout() {
+            // Revert UI state to "Guest"
+            document.getElementById('nav-login-wrapper').style.display = 'block';
+            document.getElementById('nav-logout-wrapper').style.display = 'none';
+            
+            document.getElementById('header-user-name').innerText = "Guest • Viewing Mode";
+            document.getElementById('header-status-dot').classList.remove('logged-in');
+        }
+
+        // --- 2. SPA Navigation Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const navButtons = document.querySelectorAll('.nav-links .nav-btn');
+            const pages = document.querySelectorAll('.page');
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    navButtons.forEach(b => b.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+
+                    btn.classList.add('active');
+                    const targetId = btn.getAttribute('data-target');
+                    
+                    setTimeout(() => {
+                        document.getElementById(targetId).classList.add('active');
+                    }, 50);
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+
+            // --- 3. Interactive Simulator Button (Restored Logic) ---
+            const simBtn = document.getElementById('sim-btn');
+            const simResult = document.getElementById('sim-result');
+
+            if(simBtn) {
+                simBtn.addEventListener('click', () => {
+                    simBtn.innerText = "Processing Logic...";
+                    simBtn.style.opacity = "0.7";
+                    simBtn.style.pointerEvents = "none";
+
+                    setTimeout(() => {
+                        simBtn.style.display = "none";
+                        simResult.style.display = "block";
+                        
+                        simResult.animate([
+                            { opacity: 0, transform: 'translateY(10px)' },
+                            { opacity: 1, transform: 'translateY(0)' }
+                        ], { duration: 500, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+                        
+                    }, 1200); 
+                });
+            }
+        });
+    </script>
+</body>
+</html>
