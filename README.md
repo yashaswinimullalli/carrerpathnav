@@ -62,4 +62,4 @@ Because this project is purely frontend and zero-dependency, running it is insta
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/yourusername/careerpath-orbital-ui.git](https://github.com/yourusername/careerpath-orbital-ui.git)
+   git clone [https://github.com/yourusername/careerpath.git](https://github.com/yourusername/careerpath-orbital-ui.git)
